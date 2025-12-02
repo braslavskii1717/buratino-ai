@@ -36,11 +36,12 @@ export async function POST(request: NextRequest) {
       success: true 
     });
     
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('API Error:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ 
       message: 'Извини, произошла ошибка. Попробуй еще раз!',
-      error: error.message,
+      error: errorMessage,
       success: false 
     }, { status: 500 });
   }
