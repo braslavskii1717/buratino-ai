@@ -184,3 +184,4 @@ PERPLEXITY_API_KEY=your_perplexity_key_here
 [⬆ Наверх](#-буратино-ai---твой-ai-ассистент)
 
 </div>
+# Force rebuild with new env vars
