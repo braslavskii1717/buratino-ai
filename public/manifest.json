@@ -1,12 +1,11 @@
 {
-  "name": "Буратино AI - Твой AI Ассистент",
-  "short_name": "Буратино AI",
-  "description": "Дружелюбный AI-ассистент из цифрового леса с голосовым общением и видео приветствием",
+  "name": "Буратино AI",
+  "short_name": "Buratino",
+  "description": "Твой дружелюбный AI-ассистент",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FEF3C7",
-  "theme_color": "#F59E0B",
-  "orientation": "portrait-primary",
+  "background_color": "#fef3c7",
+  "theme_color": "#d97706",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -20,31 +19,5 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshot-1.png",
-      "sizes": "1080x1920",
-      "type": "image/png",
-      "form_factor": "narrow"
-    }
-  ],
-  "categories": ["productivity", "utilities", "education", "entertainment"],
-  "shortcuts": [
-    {
-      "name": "Начать чат",
-      "short_name": "Чат",
-      "description": "Начать разговор с Буратино AI",
-      "url": "/?action=chat",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
-    }
-  ],
-  "share_target": {
-    "action": "/",
-    "method": "GET",
-    "params": {
-      "title": "title",
-      "text": "text"
-    }
-  }
+  ]
 }

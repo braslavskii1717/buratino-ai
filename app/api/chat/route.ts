@@ -1,26 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { chatWithBuratino } from '@/lib/gemini';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-export async function POST(req: NextRequest) {
+const SYSTEM_PROMPT = `Ты — Буратино, дружелюбный AI-ассистент. 
+Веселый характер, помогаешь людям.
+Говоришь на русском языке, дружелюбный тон.
+Ответы короткие, 2-3 предложения.`;
+
+export async function POST(request: NextRequest) {
   try {
-    const { messages, isFirstVisit } = await req.json();
-
-    if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json({ error: 'Invalid messages', success: false }, { status: 400 });
+    const { messages } = await request.json();
+    
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('API key not found');
     }
 
-    const response = await chatWithBuratino(messages, isFirstVisit);
-
-    return NextResponse.json({
-      message: response,
-      success: true,
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-pro',
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 200,
+      }
     });
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('❌ Chat API error:', errorMessage);
-    return NextResponse.json(
-      { error: `Ошибка API: ${errorMessage}`, success: false },
-      { status: 500 }
-    );
+
+    const lastMessage = messages[messages.length - 1];
+    const prompt = `${SYSTEM_PROMPT}\n\nПользователь: ${lastMessage.content}\nБуратино:`;
+    
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    return NextResponse.json({ 
+      message: text,
+      success: true 
+    });
+    
+  } catch (error: any) {
+    console.error('API Error:', error);
+    return NextResponse.json({ 
+      message: 'Извини, произошла ошибка. Попробуй еще раз!',
+      error: error.message,
+      success: false 
+    }, { status: 500 });
   }
 }
