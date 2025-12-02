@@ -24,7 +24,7 @@ export default function LandingPage() {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [greetings]);
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
