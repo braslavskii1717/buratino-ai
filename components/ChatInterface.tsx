@@ -8,11 +8,13 @@ interface Message {
   content: string;
 }
 
+type ModelType = 'gemini' | 'groq' | 'claude' | 'openai' | 'perplexity';
+
 export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<'gemini' | 'groq'>('gemini');
+  const [selectedModel, setSelectedModel] = useState<ModelType>('gemini');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -20,6 +22,14 @@ export default function ChatInterface() {
   };
 
   useEffect(scrollToBottom, [messages]);
+
+  const modelConfig = {
+    gemini: { icon: '🚀', name: 'Gemini', color: 'blue' },
+    groq: { icon: '⚡', name: 'Groq', color: 'purple' },
+    claude: { icon: '🧠', name: 'Claude', color: 'orange' },
+    openai: { icon: '🤖', name: 'GPT-4o', color: 'green' },
+    perplexity: { icon: '🔍', name: 'Perplexity', color: 'teal' }
+  };
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -74,9 +84,9 @@ export default function ChatInterface() {
       </div>
 
       {/* Главный контейнер */}
-      <div className="relative z-10 flex flex-col h-screen max-w-5xl mx-auto p-4">
+      <div className="relative z-10 flex flex-col h-screen max-w-6xl mx-auto p-4">
         
-        {/* Заголовок с переключателем моделей */}
+        {/* Заголовок с 5 переключателями моделей */}
         <motion.div 
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -86,30 +96,23 @@ export default function ChatInterface() {
             <h1 className="text-4xl font-bold text-white drop-shadow-lg" style={{ textShadow: '3px 3px 0px rgba(0,0,0,0.3)' }}>
               🎭 Буратино AI
             </h1>
-            <p className="text-amber-100 text-sm mt-1">Твой дружелюбный деревянный помощник!</p>
+            <p className="text-amber-100 text-sm mt-1">5 умных моделей на выбор!</p>
             
             {/* Переключатель моделей */}
-            <div className="flex gap-2 justify-center mt-3">
-              <button
-                onClick={() => setSelectedModel('gemini')}
-                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
-                  selectedModel === 'gemini'
-                    ? 'bg-white text-amber-700 shadow-lg'
-                    : 'bg-amber-500/30 text-white hover:bg-amber-500/50'
-                }`}
-              >
-                🚀 Gemini
-              </button>
-              <button
-                onClick={() => setSelectedModel('groq')}
-                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
-                  selectedModel === 'groq'
-                    ? 'bg-white text-amber-700 shadow-lg'
-                    : 'bg-amber-500/30 text-white hover:bg-amber-500/50'
-                }`}
-              >
-                ⚡ Groq
-              </button>
+            <div className="flex flex-wrap gap-2 justify-center mt-3">
+              {Object.entries(modelConfig).map(([key, config]) => (
+                <button
+                  key={key}
+                  onClick={() => setSelectedModel(key as ModelType)}
+                  className={`px-3 py-2 rounded-full text-xs font-bold transition-all ${
+                    selectedModel === key
+                      ? 'bg-white text-amber-700 shadow-lg scale-110'
+                      : 'bg-amber-500/30 text-white hover:bg-amber-500/50'
+                  }`}
+                >
+                  {config.icon} {config.name}
+                </button>
+              ))}
             </div>
           </div>
         </motion.div>
