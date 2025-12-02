@@ -23,7 +23,9 @@ export default function ChatInterface({ isFirstVisit, onMessageReceived, onSpeak
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  useEffect(scrollToBottom, [messages, scrollToBottom]);
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
 
   const speakMessage = useCallback((text: string) => {
     if ('speechSynthesis' in window) {
