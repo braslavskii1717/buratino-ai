@@ -51,7 +51,7 @@ export default function BuratinoAvatar({ isThinking = false }: BuratinoAvatarPro
                 className="relative"
               >
                 <Image
-                  src="/images/3D_Buratino_dumaet_-sostoianie_zagruzki.jpg"
+                  src="/images/3D_Buratino_dumaet_-sostoianie_zagruzki.png"
                   alt="Буратино думает"
                   width={150}
                   height={150}
@@ -74,7 +74,7 @@ export default function BuratinoAvatar({ isThinking = false }: BuratinoAvatarPro
                 transition={{ type: "spring", stiffness: 300 }}
               >
                 <Image
-                  src="/images/3D_Buratino_-_glavnyi_personazh_-ulybka.jpg"
+                  src="/images/3D_Buratino_-_glavnyi_personazh_-ulybka.png"
                   alt="Буратино"
                   width={150}
                   height={150}
