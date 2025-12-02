@@ -1,5 +1,8 @@
 'use client';
+
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
+import { useState, useEffect } from 'react';
 
 interface Props {
   isSpeaking: boolean;
@@ -7,107 +10,154 @@ interface Props {
 }
 
 export default function BuratinoAvatar({ isSpeaking, currentMessage }: Props) {
+  const [expression, setExpression] = useState<'idle' | 'happy' | 'thinking'>('idle');
+
+  useEffect(() => {
+    if (isSpeaking) {
+      setExpression('happy');
+    } else if (currentMessage.includes('?')) {
+      setExpression('thinking');
+    } else {
+      setExpression('idle');
+    }
+  }, [isSpeaking, currentMessage]);
+
+  // Выбираем изображение в зависимости от состояния
+  const getImageSrc = () => {
+    if (isSpeaking || expression === 'happy') {
+      // Радостный Буратино когда говорит
+      return 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/8f2dc744-2617-4ba8-923d-0ec298c6f12d';
+    } else if (expression === 'thinking') {
+      // Задумчивый Буратино на вопросы
+      return 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/de9516c9-b93a-42c9-9bb1-c73e63a0f1fa';
+    } else {
+      // Спокойный Буратино по умолчанию
+      return 'https://agi-prod-file-upload-public-main-use1.s3.amazonaws.com/0a02af2b-c28d-4495-b92c-38dac3f26f03';
+    }
+  };
+
   return (
-    <div className="relative w-full aspect-square max-w-md mx-auto flex items-center justify-center">
+    <div className="relative w-full aspect-square max-w-md mx-auto">
       <motion.div
-        className="relative w-full h-full flex items-center justify-center"
+        className="relative w-full h-full bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 rounded-3xl p-6 shadow-2xl overflow-hidden"
         animate={{
-          scale: isSpeaking ? [1, 1.05, 1] : 1,
+          scale: isSpeaking ? [1, 1.02, 1] : 1,
         }}
         transition={{
-          duration: 0.5,
+          duration: 0.6,
           repeat: isSpeaking ? Infinity : 0,
+          ease: 'easeInOut',
         }}
       >
-        {/* SVG Буратино */}
-        <svg
-          viewBox="0 0 200 300"
-          className="w-full h-full drop-shadow-2xl"
-          style={{ filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.2))' }}
-        >
-          {/* Голова */}
-          ircle cx="100" cy="80" r="45" fill="#d4a574" />
-          
-          {/* Волосы */}
-          <path d="M 60 50 Q 55 30 100 25 Q 145 30 140 50" fill="#8b6f47" />
-          
-          {/* Уши */}
-          ircle cx="55" cy="85" r="8" fill="#d4a574" />
-          ircle cx="145" cy="85" r="8" fill="#d4a574" />
-          
-          {/* Глаза */}
-          ircle cx="80" cy="70" r="6" fill="#2c3e50" />
-          ircle cx="120" cy="70" r="6" fill="#2c3e50" />
-          ircle cx="82" cy="68" r="2" fill="white" />
-          ircle cx="122" cy="68" r="2" fill="white" />
-          
-          {/* Нос */}
-          <path d="M 100 80 L 105 95 L 95 95 Z" fill="#c9956f" />
-          
-          {/* Рот */}
-          <path d="M 90 100 Q 100 108 110 100" stroke="#8b4513" strokeWidth="2" fill="none" />
-          
-          {/* Шапка */}
-          <polygon points="60,45 140,45 130,20 70,20" fill="#c41e3a" />
-          <polygon points="130,20 140,20 140,40 145,35" fill="#ffffff" />
-          <polygon points="140,20 145,35 135,25" fill="#ffffff" />
-          
-          {/* Тело */}
-          <rect x="75" y="125" width="50" height="60" rx="10" fill="#4a90e2" />
-          
-          {/* Рубашка */}
-          <rect x="80" y="130" width="40" height="35" fill="#87ceeb" />
-          
-          {/* Пуговицы */}
-          ircle cx="100" cy="145" r="2" fill="#2c3e50" />
-          ircle cx="100" cy="158" r="2" fill="#2c3e50" />
-          
-          {/* Руки */}
-          <line x1="75" y1="135" x2="50" y2="150" stroke="#d4a574" strokeWidth="6" strokeLinecap="round" />
-          <line x1="125" y1="135" x2="150" y2="150" stroke="#d4a574" strokeWidth="6" strokeLinecap="round" />
-          
-          {/* Кисти */}
-          ircle cx="48" cy="152" r="5" fill="#d4a574" />
-          ircle cx="152" cy="152" r="5" fill="#d4a574" />
-          
-          {/* Ноги */}
-          <rect x="85" y="190" width="8" height="45" fill="#2c3e50" />
-          <rect x="107" y="190" width="8" height="45" fill="#2c3e50" />
-          
-          {/* Обувь */}
-          <ellipse cx="89" cy="240" rx="8" ry="6" fill="#1a1a1a" />
-          <ellipse cx="111" cy="240" rx="8" ry="6" fill="#1a1a1a" />
-          
-          {/* Золотой ключ на груди */}
-          ircle cx="100" cy="165" r="4" fill="#ffd700" />
-          <rect x="98" y="168" width="4" height="8" fill="#ffd700" />
-        </svg>
-
-        {/* Анимация рта когда говорит */}
-        <AnimatePresence>
-          {isSpeaking && (
+        {/* Decorative background pattern */}
+        <div className="absolute inset-0 opacity-10">
+          {[...Array(20)].map((_, i) => (
             <motion.div
-              className="absolute bottom-16 w-8 h-4 bg-red-400 rounded-full opacity-70"
-              animate={{ scaleY: [0.5, 1, 0.5] }}
-              transition={{ duration: 0.2, repeat: Infinity }}
+              key={i}
+              className="absolute text-4xl"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                rotate: [0, 360],
+                scale: [0.8, 1.2, 0.8],
+              }}
+              transition={{
+                duration: 10 + Math.random() * 5,
+                repeat: Infinity,
+                ease: 'linear',
+              }}
+            >
+              {['🍂', '🌿', '✨', '🔑'][Math.floor(Math.random() * 4)]}
+            </motion.div>
+          ))}
+        </div>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={expression}
+            initial={{ opacity: 0, scale: 0.85, rotateY: -45 }}
+            animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+            exit={{ opacity: 0, scale: 0.85, rotateY: 45 }}
+            transition={{ duration: 0.5, type: 'spring', stiffness: 120 }}
+            className="relative w-full h-full"
+          >
+            <Image
+              src={getImageSrc()}
+              alt="Буратино AI"
+              fill
+              className="object-contain drop-shadow-2xl"
+              priority
+              sizes="(max-width: 768px) 100vw, 50vw"
             />
-          )}
+          </motion.div>
         </AnimatePresence>
+
+        {/* Декоративные элементы леса */}
+        <div className="absolute bottom-4 left-4 right-4 flex justify-around opacity-30 pointer-events-none">
+          <motion.span 
+            className="text-3xl"
+            animate={{ rotate: [0, 5, -5, 0], scale: [1, 1.1, 1] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          >
+            🌳
+          </motion.span>
+          <motion.span 
+            className="text-3xl"
+            animate={{ y: [0, -5, 0], rotate: [0, 10, 0] }}
+            transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+          >
+            🍂
+          </motion.span>
+          <motion.span 
+            className="text-3xl"
+            animate={{ rotate: [0, -5, 5, 0], scale: [1, 1.05, 1] }}
+            transition={{ duration: 4, repeat: Infinity, delay: 1 }}
+          >
+            🌲
+          </motion.span>
+        </div>
       </motion.div>
 
-      {/* Всплывающее сообщение */}
+      {/* Message bubble */}
       <AnimatePresence>
         {currentMessage && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="absolute -right-4 top-0 bg-white rounded-2xl p-4 shadow-lg max-w-xs"
+            initial={{ opacity: 0, y: 20, scale: 0.8, x: 20 }}
+            animate={{ opacity: 1, y: 0, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: -10 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+            className="absolute -right-2 top-0 bg-white rounded-2xl p-5 shadow-2xl max-w-xs border-2 border-amber-300 z-10"
           >
-            <p className="text-sm text-gray-800">{currentMessage.slice(0, 100)}</p>
+            <div className="absolute -left-3 top-8 w-0 h-0 border-t-[12px] border-t-transparent border-r-[16px] border-r-white border-b-[12px] border-b-transparent" />
+            <div className="absolute -left-[14px] top-8 w-0 h-0 border-t-[12px] border-t-transparent border-r-[16px] border-r-amber-300 border-b-[12px] border-b-transparent" />
+            <p className="text-sm font-medium text-gray-800 leading-relaxed">
+              {currentMessage.slice(0, 120)}
+              {currentMessage.length > 120 && '...'}
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Animated glow when speaking */}
+      {isSpeaking && (
+        <motion.div
+          className="absolute inset-0 rounded-3xl pointer-events-none"
+          animate={{
+            boxShadow: [
+              '0 0 25px rgba(251, 191, 36, 0.4)',
+              '0 0 50px rgba(251, 191, 36, 0.7)',
+              '0 0 25px rgba(251, 191, 36, 0.4)',
+            ],
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+      )}
     </div>
   );
 }
