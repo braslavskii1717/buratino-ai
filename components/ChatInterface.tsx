@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
 interface Message {
@@ -19,19 +19,25 @@ export default function ChatInterface({ isFirstVisit, onMessageReceived, onSpeak
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (isFirstVisit && messages.length === 0) {
-      handleSendMessage('Привет!', true);
-    }
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  useEffect(scrollToBottom, [messages, scrollToBottom]);
 
-  useEffect(scrollToBottom, [messages]);
+  const speakMessage = useCallback((text: string) => {
+    if ('speechSynthesis' in window) {
+      onSpeakingChange(true);
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'ru-RU';
+      utterance.rate = 0.9;
+      utterance.pitch = 1.2;
+      utterance.onend = () => onSpeakingChange(false);
+      window.speechSynthesis.speak(utterance);
+    }
+  }, [onSpeakingChange]);
 
-  const handleSendMessage = async (text?: string, silent = false) => {
+  const handleSendMessage = useCallback(async (text?: string, silent = false) => {
     const messageText = text || input;
     if (!messageText.trim() || isLoading) return;
 
@@ -66,19 +72,13 @@ export default function ChatInterface({ isFirstVisit, onMessageReceived, onSpeak
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [input, isLoading, messages, onMessageReceived, speakMessage]);
 
-  const speakMessage = (text: string) => {
-    if ('speechSynthesis' in window) {
-      onSpeakingChange(true);
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'ru-RU';
-      utterance.rate = 0.9;
-      utterance.pitch = 1.2;
-      utterance.onend = () => onSpeakingChange(false);
-      window.speechSynthesis.speak(utterance);
+  useEffect(() => {
+    if (isFirstVisit && messages.length === 0) {
+      handleSendMessage('Привет!', true);
     }
-  };
+  }, [isFirstVisit, messages.length, handleSendMessage]);
 
   return (
     <div className="bg-white rounded-3xl shadow-xl p-6 h-[600px] flex flex-col">

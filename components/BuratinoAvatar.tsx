@@ -1,7 +1,6 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
 
 interface Props {
   isSpeaking: boolean;
@@ -9,18 +8,6 @@ interface Props {
 }
 
 export default function BuratinoAvatar({ isSpeaking, currentMessage }: Props) {
-  const [expression, setExpression] = useState<'idle' | 'happy' | 'thinking'>('idle');
-
-  useEffect(() => {
-    if (isSpeaking) {
-      setExpression('happy');
-    } else if (currentMessage.includes('?')) {
-      setExpression('thinking');
-    } else {
-      setExpression('idle');
-    }
-  }, [isSpeaking, currentMessage]);
-
   return (
     <div className="relative w-full aspect-square max-w-md mx-auto">
       <motion.div
