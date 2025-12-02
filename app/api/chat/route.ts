@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
     const { messages, isFirstVisit } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
-      return NextResponse.json({ error: 'Invalid messages' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid messages', success: false }, { status: 400 });
     }
 
     const response = await chatWithBuratino(messages, isFirstVisit);
@@ -15,10 +15,11 @@ export async function POST(req: NextRequest) {
       message: response,
       success: true,
     });
-  } catch (error) {
-    console.error('Chat API error:', error);
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ Chat API error:', errorMessage);
     return NextResponse.json(
-      { error: 'Ошибка при общении с Буратино', success: false },
+      { error: `Ошибка API: ${errorMessage}`, success: false },
       { status: 500 }
     );
   }
