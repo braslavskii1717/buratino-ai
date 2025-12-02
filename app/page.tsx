@@ -1,8 +1,11 @@
 'use client';
+
+import dynamic from 'next/dynamic';
 import { useState, useEffect } from 'react';
-import BuratinoAvatar from '@/components/BuratinoAvatar';
-import ChatInterface from '@/components/ChatInterface';
-import IntroAnimation from '@/components/IntroAnimation';
+
+const BuratinoAvatar = dynamic(() => import('@/components/BuratinoAvatar'), { ssr: false });
+const ChatInterface = dynamic(() => import('@/components/ChatInterface'), { ssr: false });
+const IntroAnimation = dynamic(() => import('@/components/IntroAnimation'), { ssr: false });
 
 export default function Home() {
   const [showIntro, setShowIntro] = useState(true);
