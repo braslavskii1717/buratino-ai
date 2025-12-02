@@ -14,91 +14,123 @@ interface Message {
   content: string;
 }
 
+interface RequestBody {
+  messages: Message[];
+  model: string;
+}
+
 // 1. Gemini 1.5 Flash
 async function callGemini(messages: Message[]): Promise<string> {
   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-  if (!apiKey) throw new Error('Gemini API key not found');
+  if (!apiKey) throw new Error('Gemini API key not configured');
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ 
     model: 'gemini-1.5-flash',
-    generationConfig: { temperature: 0.7, maxOutputTokens: 200 }
+    generationConfig: { 
+      temperature: 0.7, 
+      maxOutputTokens: 300,
+    }
   });
 
   const lastMessage = messages[messages.length - 1];
   const prompt = `${SYSTEM_PROMPT}\n\nПользователь: ${lastMessage.content}\nБуратино:`;
   
   const result = await model.generateContent(prompt);
-  return result.response.text();
+  const response = await result.response;
+  return response.text();
 }
 
 // 2. Groq (Llama 3.3 70B)
 async function callGroq(messages: Message[]): Promise<string> {
   const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) throw new Error('Groq API key not found');
+  if (!apiKey) throw new Error('Groq API key not configured');
 
   const groq = new Groq({ apiKey });
+  
+  const groqMessages = messages
+    .filter(m => m.role !== 'system')
+    .map((m) => ({ 
+      role: (m.role === 'assistant' ? 'assistant' : 'user') as 'assistant' | 'user',
+      content: m.content 
+    }));
+
   const completion = await groq.chat.completions.create({
     messages: [
-      { role: 'system' as const, content: SYSTEM_PROMPT },
-      ...messages.map((m) => ({ 
-        role: m.role === 'assistant' ? 'assistant' as const : 'user' as const, 
-        content: m.content 
-      }))
+      { role: 'system', content: SYSTEM_PROMPT },
+      ...groqMessages
     ],
     model: 'llama-3.3-70b-versatile',
     temperature: 0.7,
-    max_tokens: 200,
+    max_tokens: 300,
   });
 
-  return completion.choices[0]?.message?.content || 'Нет ответа';
+  return completion.choices[0]?.message?.content || 'Извини, не получил ответ';
 }
 
 // 3. Claude 3.5 Haiku
 async function callClaude(messages: Message[]): Promise<string> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('Claude API key not found');
+  if (!apiKey) throw new Error('Claude API key not configured');
 
   const anthropic = new Anthropic({ apiKey });
+  
+  const claudeMessages = messages
+    .filter(m => m.role !== 'system')
+    .map((m) => ({
+      role: (m.role === 'assistant' ? 'assistant' : 'user') as 'assistant' | 'user',
+      content: m.content
+    }));
+
   const response = await anthropic.messages.create({
     model: 'claude-3-5-haiku-20241022',
-    max_tokens: 200,
+    max_tokens: 300,
     system: SYSTEM_PROMPT,
-    messages: messages.map((m) => ({
-      role: m.role === 'assistant' ? 'assistant' as const : 'user' as const,
-      content: m.content
-    }))
+    messages: claudeMessages
   });
 
-  return response.content[0].type === 'text' ? response.content[0].text : 'Нет ответа';
+  const content = response.content[0];
+  return content.type === 'text' ? content.text : 'Извини, не получил ответ';
 }
 
 // 4. OpenAI GPT-4o-mini
 async function callOpenAI(messages: Message[]): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error('OpenAI API key not found');
+  if (!apiKey) throw new Error('OpenAI API key not configured');
 
   const openai = new OpenAI({ apiKey });
+  
+  const openaiMessages = messages
+    .filter(m => m.role !== 'system')
+    .map((m) => ({ 
+      role: (m.role === 'assistant' ? 'assistant' : 'user') as 'assistant' | 'user',
+      content: m.content 
+    }));
+
   const completion = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [
-      { role: 'system' as const, content: SYSTEM_PROMPT },
-      ...messages.map((m) => ({ 
-        role: m.role === 'assistant' ? 'assistant' as const : 'user' as const, 
-        content: m.content 
-      }))
+      { role: 'system', content: SYSTEM_PROMPT },
+      ...openaiMessages
     ],
     temperature: 0.7,
-    max_tokens: 200,
+    max_tokens: 300,
   });
 
-  return completion.choices[0]?.message?.content || 'Нет ответа';
+  return completion.choices[0]?.message?.content || 'Извини, не получил ответ';
 }
 
 // 5. Perplexity (Llama 3.1 Sonar)
 async function callPerplexity(messages: Message[]): Promise<string> {
   const apiKey = process.env.PERPLEXITY_API_KEY;
-  if (!apiKey) throw new Error('Perplexity API key not found');
+  if (!apiKey) throw new Error('Perplexity API key not configured');
+
+  const perplexityMessages = messages
+    .filter(m => m.role !== 'system')
+    .map((m) => ({ 
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: m.content 
+    }));
 
   const response = await fetch('https://api.perplexity.ai/chat/completions', {
     method: 'POST',
@@ -110,24 +142,44 @@ async function callPerplexity(messages: Message[]): Promise<string> {
       model: 'llama-3.1-sonar-small-128k-chat',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
-        ...messages.map((m) => ({ 
-          role: m.role === 'assistant' ? 'assistant' : 'user', 
-          content: m.content 
-        }))
+        ...perplexityMessages
       ],
       temperature: 0.7,
-      max_tokens: 200
+      max_tokens: 300
     })
   });
 
+  if (!response.ok) {
+    throw new Error(`Perplexity API error: ${response.status}`);
+  }
+
   const data = await response.json();
-  return data.choices[0]?.message?.content || 'Нет ответа';
+  return data.choices[0]?.message?.content || 'Извини, не получил ответ';
 }
 
 export async function POST(request: NextRequest) {
+  let requestBody: RequestBody;
+  
   try {
-    const { messages, model = 'gemini' } = await request.json();
-    
+    requestBody = await request.json();
+  } catch (error) {
+    console.error('Failed to parse request body:', error);
+    return NextResponse.json({ 
+      message: 'Неверный формат запроса',
+      success: false 
+    }, { status: 400 });
+  }
+
+  const { messages, model = 'gemini' } = requestBody;
+
+  if (!messages || !Array.isArray(messages)) {
+    return NextResponse.json({ 
+      message: 'Сообщения не предоставлены',
+      success: false 
+    }, { status: 400 });
+  }
+
+  try {
     let responseText: string;
 
     // Выбираем модель
@@ -144,6 +196,7 @@ export async function POST(request: NextRequest) {
       case 'perplexity':
         responseText = await callPerplexity(messages);
         break;
+      case 'gemini':
       default:
         responseText = await callGemini(messages);
     }
@@ -155,25 +208,13 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error: unknown) {
-    console.error('API Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error(`API Error for model ${model}:`, error);
+    const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
     
-    // Fallback на Groq (самый быстрый)
-    try {
-      const body = await request.json();
-      const responseText = await callGroq(body.messages);
-      return NextResponse.json({ 
-        message: responseText,
-        model: 'groq',
-        success: true,
-        fallback: true
-      });
-    } catch {
-      return NextResponse.json({ 
-        message: 'Извини, произошла ошибка. Попробуй еще раз!',
-        error: errorMessage,
-        success: false 
-      }, { status: 500 });
-    }
+    return NextResponse.json({ 
+      message: `Ошибка ${model}: ${errorMessage}. Попробуй другую модель!`,
+      error: errorMessage,
+      success: false 
+    }, { status: 500 });
   }
 }
