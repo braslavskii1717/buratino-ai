@@ -19,29 +19,32 @@ interface RequestBody {
   model: string;
 }
 
-// 1. Gemini 1.5 Flash
+// 1. Gemini 2.0 Flash (ИСПРАВЛЕНО!)
 async function callGemini(messages: Message[]): Promise<string> {
   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
   if (!apiKey) throw new Error('Gemini API key not configured');
 
   const genAI = new GoogleGenerativeAI(apiKey);
   const model = genAI.getGenerativeModel({ 
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.0-flash-exp',  // ПРАВИЛЬНАЯ МОДЕЛЬ!
     generationConfig: { 
       temperature: 0.7, 
       maxOutputTokens: 300,
     }
   });
 
-  const lastMessage = messages[messages.length - 1];
-  const prompt = `${SYSTEM_PROMPT}\n\nПользователь: ${lastMessage.content}\nБуратино:`;
+  const conversationHistory = messages
+    .map(m => `${m.role === 'user' ? 'Пользователь' : 'Буратино'}: ${m.content}`)
+    .join('\n');
+  
+  const prompt = `${SYSTEM_PROMPT}\n\n${conversationHistory}\nБуратино:`;
   
   const result = await model.generateContent(prompt);
   const response = await result.response;
   return response.text();
 }
 
-// 2. Groq (Llama 3.3 70B)
+// 2. Groq (Llama 3.3 70B) - РАБОТАЕТ!
 async function callGroq(messages: Message[]): Promise<string> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) throw new Error('Groq API key not configured');
@@ -68,7 +71,7 @@ async function callGroq(messages: Message[]): Promise<string> {
   return completion.choices[0]?.message?.content || 'Извини, не получил ответ';
 }
 
-// 3. Claude 3.5 Haiku
+// 3. Claude 3.5 Haiku (ПРОВЕРКА БАЛАНСА)
 async function callClaude(messages: Message[]): Promise<string> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('Claude API key not configured');
@@ -120,7 +123,7 @@ async function callOpenAI(messages: Message[]): Promise<string> {
   return completion.choices[0]?.message?.content || 'Извини, не получил ответ';
 }
 
-// 5. Perplexity (Llama 3.1 Sonar)
+// 5. Perplexity (Llama 3.1 Sonar) - ИСПРАВЛЕНО!
 async function callPerplexity(messages: Message[]): Promise<string> {
   const apiKey = process.env.PERPLEXITY_API_KEY;
   if (!apiKey) throw new Error('Perplexity API key not configured');
@@ -139,7 +142,7 @@ async function callPerplexity(messages: Message[]): Promise<string> {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'llama-3.1-sonar-small-128k-chat',
+      model: 'llama-3.1-sonar-small-128k-online',  // ОНЛАЙН МОДЕЛЬ!
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         ...perplexityMessages
@@ -150,7 +153,8 @@ async function callPerplexity(messages: Message[]): Promise<string> {
   });
 
   if (!response.ok) {
-    throw new Error(`Perplexity API error: ${response.status}`);
+    const errorText = await response.text();
+    throw new Error(`Perplexity API error ${response.status}: ${errorText}`);
   }
 
   const data = await response.json();
@@ -170,7 +174,7 @@ export async function POST(request: NextRequest) {
     }, { status: 400 });
   }
 
-  const { messages, model = 'gemini' } = requestBody;
+  const { messages, model = 'groq' } = requestBody;
 
   if (!messages || !Array.isArray(messages)) {
     return NextResponse.json({ 
@@ -182,8 +186,10 @@ export async function POST(request: NextRequest) {
   try {
     let responseText: string;
 
-    // Выбираем модель
     switch (model) {
+      case 'gemini':
+        responseText = await callGemini(messages);
+        break;
       case 'groq':
         responseText = await callGroq(messages);
         break;
@@ -196,9 +202,8 @@ export async function POST(request: NextRequest) {
       case 'perplexity':
         responseText = await callPerplexity(messages);
         break;
-      case 'gemini':
       default:
-        responseText = await callGemini(messages);
+        responseText = await callGroq(messages);
     }
 
     return NextResponse.json({ 
