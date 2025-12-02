@@ -10,7 +10,7 @@ const SYSTEM_PROMPT = `Ты — Буратино, дружелюбный AI-ас
 Ответы короткие, 2-3 предложения.`;
 
 interface Message {
-  role: string;
+  role: 'user' | 'assistant' | 'system';
   content: string;
 }
 
@@ -40,8 +40,11 @@ async function callGroq(messages: Message[]): Promise<string> {
   const groq = new Groq({ apiKey });
   const completion = await groq.chat.completions.create({
     messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      ...messages.map((m) => ({ role: m.role, content: m.content }))
+      { role: 'system' as const, content: SYSTEM_PROMPT },
+      ...messages.map((m) => ({ 
+        role: m.role === 'assistant' ? 'assistant' as const : 'user' as const, 
+        content: m.content 
+      }))
     ],
     model: 'llama-3.3-70b-versatile',
     temperature: 0.7,
@@ -62,7 +65,7 @@ async function callClaude(messages: Message[]): Promise<string> {
     max_tokens: 200,
     system: SYSTEM_PROMPT,
     messages: messages.map((m) => ({
-      role: m.role === 'assistant' ? 'assistant' : 'user',
+      role: m.role === 'assistant' ? 'assistant' as const : 'user' as const,
       content: m.content
     }))
   });
@@ -79,8 +82,11 @@ async function callOpenAI(messages: Message[]): Promise<string> {
   const completion = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
     messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      ...messages.map((m) => ({ role: m.role, content: m.content }))
+      { role: 'system' as const, content: SYSTEM_PROMPT },
+      ...messages.map((m) => ({ 
+        role: m.role === 'assistant' ? 'assistant' as const : 'user' as const, 
+        content: m.content 
+      }))
     ],
     temperature: 0.7,
     max_tokens: 200,
@@ -104,7 +110,10 @@ async function callPerplexity(messages: Message[]): Promise<string> {
       model: 'llama-3.1-sonar-small-128k-chat',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
-        ...messages.map((m) => ({ role: m.role, content: m.content }))
+        ...messages.map((m) => ({ 
+          role: m.role === 'assistant' ? 'assistant' : 'user', 
+          content: m.content 
+        }))
       ],
       temperature: 0.7,
       max_tokens: 200
