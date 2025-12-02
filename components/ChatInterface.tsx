@@ -12,6 +12,7 @@ export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<'gemini' | 'groq'>('gemini');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -32,7 +33,10 @@ export default function ChatInterface() {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [...messages, userMessage] }),
+        body: JSON.stringify({ 
+          messages: [...messages, userMessage],
+          model: selectedModel 
+        }),
       });
 
       const data = await response.json();
@@ -58,12 +62,11 @@ export default function ChatInterface() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Сказочный фон с деревьями */}
+      {/* Сказочный фон */}
       <div className="absolute inset-0 bg-gradient-to-br from-amber-100 via-yellow-50 to-orange-100">
         <div className="absolute inset-0 opacity-20">
           <div className="absolute bottom-0 left-0 w-full h-64 bg-gradient-to-t from-amber-900/30 to-transparent"></div>
         </div>
-        {/* Деревья на фоне */}
         <div className="absolute bottom-0 left-10 text-6xl opacity-30">🌲</div>
         <div className="absolute bottom-0 right-20 text-7xl opacity-30">🌳</div>
         <div className="absolute bottom-0 left-1/4 text-5xl opacity-20">🍂</div>
@@ -73,7 +76,7 @@ export default function ChatInterface() {
       {/* Главный контейнер */}
       <div className="relative z-10 flex flex-col h-screen max-w-5xl mx-auto p-4">
         
-        {/* Заголовок в деревянном стиле */}
+        {/* Заголовок с переключателем моделей */}
         <motion.div 
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -84,6 +87,30 @@ export default function ChatInterface() {
               🎭 Буратино AI
             </h1>
             <p className="text-amber-100 text-sm mt-1">Твой дружелюбный деревянный помощник!</p>
+            
+            {/* Переключатель моделей */}
+            <div className="flex gap-2 justify-center mt-3">
+              <button
+                onClick={() => setSelectedModel('gemini')}
+                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
+                  selectedModel === 'gemini'
+                    ? 'bg-white text-amber-700 shadow-lg'
+                    : 'bg-amber-500/30 text-white hover:bg-amber-500/50'
+                }`}
+              >
+                🚀 Gemini
+              </button>
+              <button
+                onClick={() => setSelectedModel('groq')}
+                className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
+                  selectedModel === 'groq'
+                    ? 'bg-white text-amber-700 shadow-lg'
+                    : 'bg-amber-500/30 text-white hover:bg-amber-500/50'
+                }`}
+              >
+                ⚡ Groq
+              </button>
+            </div>
           </div>
         </motion.div>
 
@@ -147,7 +174,7 @@ export default function ChatInterface() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Поле ввода в деревянном стиле */}
+            {/* Поле ввода */}
             <div className="p-4 bg-gradient-to-r from-amber-700 to-orange-800 border-t-4 border-amber-900">
               <div className="flex gap-3">
                 <input
