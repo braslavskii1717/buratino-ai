@@ -8,7 +8,7 @@ interface Message {
   content: string;
 }
 
-type ModelType = 'gemini' | 'groq' | 'claude' | 'openai' | 'perplexity';
+type ModelType = 'gemini' | 'groq' | 'openai';
 
 export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -24,12 +24,11 @@ export default function ChatInterface() {
 
   useEffect(scrollToBottom, [messages]);
 
+  // ТОЛЬКО 3 РАБОЧИЕ МОДЕЛИ!
   const modelConfig = {
-    gemini: { icon: '🚀', name: 'Gemini', color: 'from-blue-500 to-blue-600' },
     groq: { icon: '⚡', name: 'Groq', color: 'from-purple-500 to-purple-600' },
-    claude: { icon: '🧠', name: 'Claude', color: 'from-orange-500 to-orange-600' },
-    openai: { icon: '🤖', name: 'GPT-4o', color: 'from-green-500 to-green-600' },
-    perplexity: { icon: '🔍', name: 'Perplexity', color: 'from-teal-500 to-teal-600' }
+    gemini: { icon: '🚀', name: 'Gemini', color: 'from-blue-500 to-blue-600' },
+    openai: { icon: '🤖', name: 'GPT-4o', color: 'from-green-500 to-green-600' }
   };
 
   const sendMessage = async () => {
@@ -84,7 +83,7 @@ export default function ChatInterface() {
         <div className="absolute top-20 right-10 text-4xl opacity-20">☀️</div>
       </div>
 
-      {/* ФИКСИРОВАННЫЙ ЗАГОЛОВОК с переключателями моделей */}
+      {/* ФИКСИРОВАННЫЙ ЗАГОЛОВОК - 3 МОДЕЛИ */}
       <motion.div 
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -94,8 +93,9 @@ export default function ChatInterface() {
           <h1 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg mb-2" style={{ textShadow: '3px 3px 0px rgba(0,0,0,0.3)' }}>
             🎭 Буратино AI
           </h1>
+          <p className="text-xs text-amber-100 mb-2">3 умные модели на выбор!</p>
           
-          {/* Переключатель моделей - всегда виден */}
+          {/* 3 МОДЕЛИ */}
           <div className="flex flex-wrap gap-2 justify-center">
             {Object.entries(modelConfig).map(([key, config]) => (
               <button
@@ -131,7 +131,7 @@ export default function ChatInterface() {
         {/* Сообщения справа */}
         <div className="flex-1 bg-white/60 backdrop-blur-sm rounded-3xl shadow-2xl border-4 border-amber-700 overflow-hidden flex flex-col">
           
-          {/* Список сообщений - скроллится */}
+          {/* Список сообщений */}
           <div 
             ref={messagesContainerRef}
             className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4"
@@ -185,7 +185,7 @@ export default function ChatInterface() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Поле ввода - фиксировано внизу */}
+          {/* Поле ввода */}
           <div className="p-3 md:p-4 bg-gradient-to-r from-amber-700 to-orange-800 border-t-4 border-amber-900">
             <div className="flex gap-2 md:gap-3">
               <input
